@@ -1,0 +1,49 @@
+>commands of colecting data
+SELECT * FROM posts WHERE posts.ViewCount > 127402 order by posts.ViewCount desc
+SELECT * FROM posts WHERE posts.ViewCount > 74595 and posts.ViewCount < 127402 order by posts.ViewCount desc
+SELECT * FROM posts WHERE posts.ViewCount > 53210 and posts.ViewCount < 74595 order by posts.ViewCount desc
+SELECT * FROM posts WHERE posts.ViewCount > 41321 and posts.ViewCount < 53210 order by posts.ViewCount desc
+
+>commands of cleaning data
+import csv
+with open('merge.csv', newline='', encoding='utf-8') as f:
+    with open('new.csv', 'w', encoding='utf-8', newline='') as fw:
+        reader = csv.reader(f)
+        writer = csv.writer(fw)
+        for row in reader:
+            row[8] = row[8].replace(',', ' ')
+            row[8] = row[8].replace('\n', ' ')
+            row[8] = row[8].replace('\r', ' ')
+            row[8] = row[8].replace('<p>', ' ')
+            row[8] = row[8].replace('</p >', ' ')
+            row[8] = row[8].replace('<li>', ' ')
+            row[8] = row[8].replace('</li>', ' ')
+            row[8] = row[8].replace('<ul>', ' ')
+            row[8] = row[8].replace('</ul>', ' ')
+            row[15] = row[15].replace(',', ' ')
+            row[15] = row[15].replace('\n', ' ')
+            row[15] = row[15].replace('\r', ' ')
+            row[16] = row[16].replace(',', ' ')
+            row[16] = row[16].replace('\n', ' ')
+            row[16] = row[16].replace('\r', ' ')
+            writer.writerow(row)
+
+>commands of connecting to Hive
+beeline -u jdbc:hive2://localhost:10000/default -n shangyu_zhao4@datapro-ca675-m org.apache.hive.jdbc.HiveDriver
+
+>commands of creating database and table in HDFS
+create database if not exists myhive;
+create external table posts (Id int, Score int, ViewCount int, Body string, OwnerUserId int, OwnerDisplayName string, Title string, Tags string) row format delimited fields terminated by ',' collection items terminated by '|' map keys terminated by ':' ;
+
+>commands of loading data
+load data local inpath '/home/shangyu_zhao4/posts.csv' overwrite into table posts ;
+
+>commands of querying data
+Select score, id, title from posts order by score desc limit 10;
+Select viewcount, owneruserid from posts order by viewcount desc limit 10；
+Select count (owneruserid) from posts where body like ‘%cloud%’;
+
+>commands of task4
+create table shangyu as select score, owneruserid from posts order by score desc limit 10;
+create table finaldata as select shangyu.owneruserid, posts.body from shangyu left join posts on shangyu.owneruserid =posts.owneruserid;
+hdfs dfs -get /user/hive/warehouse/finaldata /home/shangyu_zhao4/
